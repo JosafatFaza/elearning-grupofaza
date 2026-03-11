@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inducción: Cajero de Tienda de Conveniencia — Grupo Faza</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&family=DM+Sans:wght@400;500&family=Playfair+Display:ital,wght@0,700;1,600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --primary:#E07A2F;--primary-dark:#B85E1A;--primary-light:#FFF3E8;
+  --accent:#FFB347;--mid:#4A3728;--text:#2D1F17;
+  --muted:#8C7265;--bg:#FAFAF8;--white:#FFFFFF;
+  --success:#2D8C4E;--error:#C0392B;--border:#E8DDD5;
+  --faza:#1A3A6A;--faza-light:#E8EEF8;--faza-gold:#C9A84C;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+
+.header{background:linear-gradient(135deg,var(--primary-dark),var(--primary) 60%,var(--accent));position:sticky;top:0;z-index:100;box-shadow:0 2px 20px rgba(224,122,47,.3);}
+.header-inner{max-width:1100px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;padding:13px 28px;gap:12px;}
+.header-brand{display:flex;align-items:center;gap:12px;flex:1;min-width:0;}
+.header-icon{width:40px;height:40px;background:rgba(255,255,255,.2);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+.header-title{color:#fff;min-width:0;}
+.header-title h1{font-family:'Sora',sans-serif;font-size:.95rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.header-title p{font-size:.7rem;opacity:.8;margin-top:1px;}
+.header-right{display:flex;align-items:center;gap:7px;flex-shrink:0;}
+.btn-hdr{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);color:rgba(255,255,255,.9);border-radius:20px;padding:4px 11px;font-size:.7rem;font-weight:600;cursor:pointer;font-family:'Sora',sans-serif;transition:all .2s;white-space:nowrap;text-decoration:none;display:inline-block;}
+.btn-hdr:hover{background:rgba(255,255,255,.22);}
+.btn-hdr.muted{background:rgba(255,80,80,.3);}
+.progress-bar{background:rgba(0,0,0,.15);height:4px;}
+.progress-fill{height:4px;background:var(--accent);transition:width .5s;width:0%;}
+
+.container{max-width:1100px;margin:0 auto;padding:24px 28px;}
+.module-nav{display:flex;gap:7px;margin-bottom:22px;flex-wrap:wrap;}
+.module-tab{padding:7px 15px;border-radius:8px;border:1.5px solid var(--border);background:var(--white);cursor:pointer;font-size:.77rem;font-weight:600;color:var(--muted);font-family:'Sora',sans-serif;transition:all .2s;white-space:nowrap;}
+.module-tab:hover{border-color:var(--primary);color:var(--primary);}
+.module-tab.active{background:var(--primary);border-color:var(--primary);color:#fff;}
+.module-tab.done{background:var(--success);border-color:var(--success);color:#fff;}
+.module-tab.locked{opacity:.4;cursor:not-allowed;pointer-events:none;}
+.content-card{background:var(--white);border-radius:16px;border:1px solid var(--border);box-shadow:0 4px 24px rgba(0,0,0,.04);display:none;animation:fadeIn .3s ease;overflow:hidden;}
+.content-card.active{display:block;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── ESCENA ── */
+.scene-wrapper{background:linear-gradient(160deg,#1a2a4a 0%,#2d4a6a 50%,#1a3a2a 100%);position:relative;overflow:hidden;min-height:310px;display:flex;flex-direction:column;}
+.scene-bg{position:absolute;inset:0;overflow:hidden;}
+.shelf{position:absolute;bottom:100px;left:50%;transform:translateX(-50%);width:260px;height:6px;background:#5a4030;border-radius:3px;}
+.shelf::before{content:'';position:absolute;top:-28px;left:10px;right:10px;height:24px;background:linear-gradient(90deg,#c0392b 0 20%,#e67e22 20% 40%,#f1c40f 40% 60%,#27ae60 60% 80%,#2980b9 80% 100%);border-radius:4px;opacity:.7;}
+.counter-desk{position:absolute;bottom:70px;right:60px;width:110px;height:50px;background:linear-gradient(180deg,#7a5a3a,#5a3a1a);border-radius:8px 8px 0 0;}
+.counter-desk::after{content:'💻';position:absolute;top:-20px;left:30px;font-size:18px;}
+.scene-floor{position:absolute;bottom:0;left:0;right:0;height:70px;background:linear-gradient(180deg,#3a2a1a,#2a1a0a);}
+.scene-progress-bar{position:absolute;top:0;left:0;right:0;height:3px;background:rgba(255,255,255,.1);z-index:6;}
+.scene-progress-fill{height:3px;background:var(--accent);width:0%;transition:width .4s ease;}
+.scene-label{position:absolute;top:11px;left:50%;transform:translateX(-50%);background:rgba(255,255,255,.12);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.2);color:#fff;font-family:'Sora',sans-serif;font-size:.67rem;font-weight:700;padding:3px 11px;border-radius:20px;letter-spacing:1px;text-transform:uppercase;z-index:5;}
+.voice-wave{position:absolute;top:11px;right:13px;display:flex;gap:3px;align-items:flex-end;height:17px;z-index:5;}
+.wave-bar{width:3px;border-radius:3px;background:var(--accent);animation:wave 1s ease infinite;}
+.wave-bar:nth-child(1){height:6px;}.wave-bar:nth-child(2){height:13px;animation-delay:.15s;}.wave-bar:nth-child(3){height:9px;animation-delay:.3s;}.wave-bar:nth-child(4){height:15px;animation-delay:.45s;}.wave-bar:nth-child(5){height:7px;animation-delay:.6s;}
+@keyframes wave{0%,100%{transform:scaleY(.4);opacity:.5}50%{transform:scaleY(1);opacity:1}}
+.voice-wave.hidden{display:none;}
+.characters-area{position:relative;flex:1;display:flex;align-items:flex-end;padding-bottom:70px;}
+.character{position:absolute;bottom:70px;display:flex;flex-direction:column;align-items:center;}
+.character.char-ana{left:14%;}.character.char-luis{right:18%;}
+.char-body{width:64px;height:100px;position:relative;}
+.char-head{width:38px;height:38px;border-radius:50%;position:absolute;top:0;left:50%;transform:translateX(-50%);border:3px solid rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:22px;}
+.char-ana .char-head{background:radial-gradient(circle at 40% 35%,#f5c28a,#d4874a);}
+.char-luis .char-head{background:radial-gradient(circle at 40% 35%,#f5c28a,#c47a3a);}
+.char-torso{position:absolute;top:36px;left:50%;transform:translateX(-50%);width:44px;height:48px;border-radius:8px 8px 4px 4px;}
+.char-ana .char-torso{background:linear-gradient(180deg,#2980b9,#1a5a8a);}
+.char-luis .char-torso{background:linear-gradient(180deg,#c0392b,#8a1a1a);}
+.char-badge{position:absolute;top:8px;left:50%;transform:translateX(-50%);width:12px;height:16px;background:#fff;border-radius:2px;}
+.char-legs{position:absolute;top:82px;left:50%;transform:translateX(-50%);width:30px;height:18px;display:flex;gap:4px;}
+.char-leg{flex:1;border-radius:0 0 4px 4px;}
+.char-ana .char-leg{background:#1a3a6a;}.char-luis .char-leg{background:#5a3a1a;}
+.char-name{font-family:'Sora',sans-serif;font-size:.62rem;font-weight:700;color:rgba(255,255,255,.7);margin-top:5px;letter-spacing:.5px;text-transform:uppercase;}
+.character.speaking .char-head{box-shadow:0 0 0 3px #FFB347,0 0 16px rgba(255,179,71,.6);}
+.character.speaking .char-body{animation:talk .4s ease infinite alternate;}
+@keyframes talk{from{transform:translateY(0)}to{transform:translateY(-4px)}}
+.character.speaking .char-head::after{content:'';position:absolute;inset:-6px;border-radius:50%;border:2px solid rgba(255,179,71,.4);animation:ripple 1s ease infinite;}
+@keyframes ripple{0%{transform:scale(1);opacity:.8}100%{transform:scale(1.5);opacity:0}}
+.bubble{position:absolute;background:#fff;border-radius:14px;padding:9px 13px;max-width:205px;min-width:110px;font-size:.79rem;line-height:1.45;color:#1a1a2e;box-shadow:0 4px 20px rgba(0,0,0,.25);opacity:0;transform:scale(.85) translateY(6px);transition:opacity .3s ease,transform .3s ease;pointer-events:none;z-index:10;}
+.bubble.show{opacity:1;transform:scale(1) translateY(0);}
+.bubble::after{content:'';position:absolute;bottom:-8px;width:16px;height:8px;background:#fff;clip-path:polygon(0 0,100% 0,50% 100%);}
+.bubble-ana{bottom:182px;left:calc(14% + 32px);}.bubble-ana::after{left:20px;}
+.bubble-luis{bottom:182px;right:calc(18% + 32px);}.bubble-luis::after{right:20px;}
+.scene-panel{background:rgba(0,0,0,.4);backdrop-filter:blur(8px);padding:11px 17px;border-top:1px solid rgba(255,255,255,.08);position:relative;z-index:5;min-height:50px;display:flex;align-items:center;gap:11px;}
+.dialog-text{flex:1;color:rgba(255,255,255,.9);font-size:.81rem;line-height:1.5;}
+.dialog-speaker{font-weight:700;margin-right:4px;}
+.speaker-ana{color:#7ec8f5;}.speaker-luis{color:#f5a87e;}
+.dots{display:flex;gap:4px;align-items:center;flex-shrink:0;}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--accent);animation:dotPulse 1.2s ease infinite;}
+.dot:nth-child(2){animation-delay:.2s;}.dot:nth-child(3){animation-delay:.4s;}
+@keyframes dotPulse{0%,80%,100%{transform:scale(.6);opacity:.4}40%{transform:scale(1);opacity:1}}
+.scene-done-lbl{color:#4CC896;font-family:'Sora',sans-serif;font-size:.72rem;font-weight:700;flex-shrink:0;display:none;}
+
+/* ── CONTENIDO ── */
+.module-content{padding:26px 30px;}
+.content-lock{position:relative;}
+.content-lock::after{content:'▶  Espera a que termine la escena…';position:absolute;inset:0;background:rgba(255,255,255,.8);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;font-family:'Sora',sans-serif;font-size:.84rem;font-weight:600;color:var(--muted);border-radius:0 0 16px 16px;z-index:20;}
+.content-lock.unlocked::after{display:none;}
+.module-header{display:flex;align-items:flex-start;gap:13px;margin-bottom:20px;}
+.module-emoji{font-size:1.8rem;}
+.module-title h2{font-family:'Sora',sans-serif;font-size:1.2rem;font-weight:700;}
+.module-title p{color:var(--muted);font-size:.87rem;margin-top:3px;}
+.divider{height:1px;background:var(--border);margin-bottom:20px;}
+.section{margin-bottom:18px;}
+.section h3{font-family:'Sora',sans-serif;font-size:.9rem;font-weight:700;color:var(--primary-dark);margin-bottom:7px;display:flex;align-items:center;gap:7px;}
+.section h3::before{content:'';display:inline-block;width:3px;height:13px;background:var(--primary);border-radius:2px;}
+.section p{line-height:1.7;color:var(--mid);font-size:.88rem;}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;}
+.info-item{background:var(--primary-light);border-radius:9px;padding:11px 13px;border-left:3px solid var(--primary);}
+.info-item strong{display:block;font-size:.73rem;color:var(--primary-dark);font-weight:700;margin-bottom:2px;font-family:'Sora',sans-serif;text-transform:uppercase;letter-spacing:.5px;}
+.info-item span{font-size:.84rem;color:var(--mid);}
+.tip-box{background:#FFF8F0;border:1px solid #FFD4A8;border-radius:9px;padding:11px 15px;margin-top:10px;display:flex;gap:9px;}
+.tip-box p{font-size:.84rem;color:var(--mid);line-height:1.6;}
+.alert-box{background:#FFF0F0;border:1px solid #F5C6C6;border-radius:9px;padding:11px 15px;margin-top:10px;display:flex;gap:9px;}
+.alert-box p{font-size:.84rem;color:#7B2020;line-height:1.6;}
+.checklist{list-style:none;margin-top:8px;}
+.checklist li{padding:6px 0;border-bottom:1px solid var(--border);font-size:.86rem;color:var(--mid);display:flex;align-items:flex-start;gap:9px;}
+.checklist li:last-child{border:none;}
+.checklist li::before{content:'✓';color:var(--success);font-weight:700;margin-top:1px;}
+.nav-btns{display:flex;justify-content:flex-end;gap:9px;margin-top:20px;}
+.btn{padding:10px 21px;border-radius:9px;border:none;cursor:pointer;font-family:'Sora',sans-serif;font-size:.85rem;font-weight:700;transition:all .2s;}
+.btn-primary{background:var(--primary);color:#fff;}
+.btn-primary:hover:not(:disabled){background:var(--primary-dark);transform:translateY(-1px);}
+.btn-primary:disabled{background:#c9a07a;cursor:not-allowed;opacity:.6;}
+.btn-outline{background:transparent;color:var(--primary);border:1.5px solid var(--primary);}
+.btn-outline:hover{background:var(--primary-light);}
+
+/* ── QUIZ ── */
+.quiz-wrap{padding:26px 30px;}
+.participant-card{background:var(--faza-light);border:1px solid #c5d5e8;border-radius:12px;padding:18px 20px;margin-bottom:20px;}
+.participant-card h3{font-family:'Sora',sans-serif;font-size:.82rem;font-weight:700;color:var(--faza);margin-bottom:14px;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+.form-group{display:flex;flex-direction:column;gap:5px;}
+.form-group label{font-family:'Sora',sans-serif;font-size:.73rem;font-weight:700;color:var(--faza);}
+.form-group input{padding:9px 12px;border:1.5px solid #c5d5e8;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.88rem;color:var(--text);outline:none;transition:border-color .2s;background:#fff;}
+.form-group input:focus{border-color:var(--faza);}
+.form-group input.error{border-color:var(--error);background:#FFF5F5;}
+.form-group input[readonly]{background:#f0f4fa;color:var(--muted);cursor:not-allowed;}
+.form-note{font-size:.72rem;color:var(--muted);}
+.attempt-row{display:flex;align-items:center;justify-content:space-between;margin-top:8px;flex-wrap:wrap;gap:8px;}
+.attempt-info{font-family:'Sora',sans-serif;font-size:.75rem;color:var(--faza);font-weight:600;display:flex;align-items:center;gap:8px;}
+.attempt-dots{display:flex;gap:5px;}
+.attempt-dot{width:10px;height:10px;border-radius:50%;border:2px solid var(--faza);}
+.attempt-dot.used{background:var(--faza);}
+.attempt-dot.fail{background:var(--error);border-color:var(--error);}
+.quiz-meta{font-family:'Sora',sans-serif;font-size:.74rem;color:var(--muted);background:#f8f9fc;border:1px solid var(--border);border-radius:8px;padding:7px 13px;margin-bottom:16px;}
+.quiz-question{margin-bottom:18px;}
+.q-num{color:var(--muted);font-size:.73rem;margin-bottom:3px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;}
+.quiz-question .q-text{font-family:'Sora',sans-serif;font-weight:600;font-size:.9rem;margin-bottom:8px;padding-left:13px;border-left:3px solid var(--primary);}
+.options{display:flex;flex-direction:column;gap:6px;}
+.option{display:flex;align-items:center;gap:10px;padding:9px 13px;border-radius:9px;border:1.5px solid var(--border);cursor:pointer;transition:all .2s;background:var(--white);font-size:.86rem;color:var(--mid);}
+.option:hover{border-color:var(--primary);background:var(--primary-light);}
+.option input{display:none;}
+.option.selected{border-color:var(--primary);background:var(--primary-light);font-weight:500;}
+.option.correct{border-color:var(--success);background:#F0FBF4;color:var(--success);}
+.option.wrong{border-color:var(--error);background:#FFF0F0;color:var(--error);}
+
+/* ── RESULTADO ── */
+.eval-result{display:none;text-align:center;padding:34px 22px;}
+.big-score{font-family:'Sora',sans-serif;font-size:3.8rem;font-weight:800;line-height:1;}
+.big-score.pass{color:var(--success);}.big-score.fail{color:var(--error);}
+.score-sub{color:var(--muted);font-size:.87rem;margin-top:3px;margin-bottom:14px;}
+.eval-badge{display:inline-block;padding:7px 20px;border-radius:30px;font-family:'Sora',sans-serif;font-weight:700;font-size:.86rem;margin-bottom:11px;}
+.badge-pass{background:#E8F8EE;color:var(--success);border:2px solid var(--success);}
+.badge-fail{background:#FFF0F0;color:var(--error);border:2px solid var(--error);}
+.badge-retake{background:#FFF8E6;color:#8B5E00;border:2px solid #F5C842;}
+.eval-msg{font-size:.92rem;color:var(--mid);max-width:420px;margin:0 auto 18px;line-height:1.6;}
+.eval-result-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+.btn-success{background:var(--success);color:#fff;padding:10px 21px;border-radius:9px;border:none;cursor:pointer;font-family:'Sora',sans-serif;font-size:.85rem;font-weight:700;}
+.btn-success:hover{background:#236B3C;}
+.btn-danger{background:var(--error);color:#fff;padding:10px 21px;border-radius:9px;border:none;cursor:pointer;font-family:'Sora',sans-serif;font-size:.85rem;font-weight:700;}
+.saving-row{display:inline-flex;align-items:center;gap:7px;font-size:.78rem;color:var(--muted);font-family:'Sora',sans-serif;margin-top:10px;}
+.spin-sm{width:14px;height:14px;border:2px solid rgba(0,0,0,.15);border-top-color:var(--faza);border-radius:50%;animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── CONSTANCIA ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);z-index:200;display:none;align-items:center;justify-content:center;padding:20px;}
+.modal-overlay.show{display:flex;}
+.modal-box{background:#fff;border-radius:16px;max-width:750px;width:100%;max-height:92vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3);}
+.modal-actions{display:flex;align-items:center;justify-content:space-between;padding:13px 18px;border-bottom:1px solid var(--border);}
+.modal-actions h3{font-family:'Sora',sans-serif;font-size:.88rem;font-weight:700;}
+.modal-btns{display:flex;gap:8px;}
+.btn-print{background:var(--faza);color:#fff;padding:7px 15px;border-radius:8px;border:none;cursor:pointer;font-family:'Sora',sans-serif;font-size:.78rem;font-weight:700;}
+.btn-close-modal{background:transparent;color:var(--muted);padding:7px 11px;border-radius:8px;border:1px solid var(--border);cursor:pointer;font-family:'Sora',sans-serif;font-size:.78rem;}
+#constancia{padding:38px 48px;font-family:'DM Sans',sans-serif;background:#fff;position:relative;}
+.cert-border{position:absolute;inset:12px;border:3px solid var(--faza-gold);border-radius:8px;pointer-events:none;}
+.cert-border::before{content:'';position:absolute;inset:5px;border:1px solid rgba(201,168,76,.4);border-radius:4px;}
+.cert-logo-area{text-align:center;margin-bottom:18px;}
+.cert-company{font-family:'Sora',sans-serif;font-size:1.45rem;font-weight:800;color:var(--faza);letter-spacing:1px;text-transform:uppercase;}
+.cert-company-sub{font-size:.75rem;color:var(--muted);letter-spacing:2px;margin-top:2px;}
+.cert-divider{width:75px;height:3px;background:linear-gradient(90deg,var(--faza),var(--faza-gold));border-radius:2px;margin:12px auto;}
+.cert-otorga{text-align:center;font-size:.84rem;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;}
+.cert-title{text-align:center;font-family:'Playfair Display',serif;font-size:2.2rem;color:var(--faza);margin-bottom:14px;letter-spacing:2px;}
+.cert-recipient-label{text-align:center;font-size:.76rem;color:var(--muted);text-transform:uppercase;letter-spacing:2px;margin-bottom:5px;}
+.cert-recipient{text-align:center;font-family:'Playfair Display',serif;font-style:italic;font-size:1.5rem;color:var(--text);border-bottom:2px solid var(--faza-gold);padding-bottom:7px;max-width:420px;margin:0 auto 18px;}
+.cert-body{text-align:center;font-size:.88rem;color:var(--mid);line-height:1.7;max-width:480px;margin:0 auto 4px;}
+.cert-course-name{font-family:'Sora',sans-serif;font-weight:700;color:var(--faza);font-size:.95rem;}
+.cert-date-line{text-align:center;font-size:.86rem;color:var(--mid);margin-bottom:24px;}
+.cert-score-badge{display:inline-block;background:var(--faza-light);border:1px solid #c5d5e8;color:var(--faza);font-family:'Sora',sans-serif;font-size:.76rem;font-weight:700;padding:4px 13px;border-radius:20px;margin-bottom:24px;}
+.cert-signature-area{display:flex;justify-content:center;margin-top:8px;}
+.cert-sig-block{text-align:center;min-width:220px;}
+.cert-sig-img-box{width:220px;height:64px;border:1.5px dashed #c5d5e8;border-radius:6px;display:flex;align-items:center;justify-content:center;margin:0 auto 6px;background:#fafbfd;}
+.cert-sig-img-box span{font-size:.68rem;color:#aab;font-family:'Sora',sans-serif;letter-spacing:.5px;}
+.cert-sig-name{font-family:'Sora',sans-serif;font-size:.8rem;font-weight:700;color:var(--text);}
+.cert-sig-title{font-size:.72rem;color:var(--muted);}
+.cert-folio{position:absolute;bottom:20px;right:32px;font-size:.64rem;color:rgba(0,0,0,.22);font-family:'Sora',sans-serif;}
+
+@media print{
+  body *{visibility:hidden;}
+  #constancia,#constancia *{visibility:visible;}
+  #constancia{position:fixed;top:0;left:0;width:100%;padding:28px 38px;}
+  .modal-actions{display:none !important;}
+}
+@media(max-width:720px){
+  .container{padding:12px;}
+  .info-grid,.form-row{grid-template-columns:1fr;}
+  .header-inner{padding:10px 14px;}
+  .module-content,.quiz-wrap{padding:15px;}
+  .bubble{max-width:135px;font-size:.73rem;}
+  .bubble-ana{left:calc(10% + 12px);}
+  .bubble-luis{right:calc(12% + 12px);}
+  .character.char-ana{left:7%;}
+  .character.char-luis{right:10%;}
+  #constancia{padding:22px;}
+}
+</style>
+</head>
+<body>
+
+<!-- PANTALLA DE BIENVENIDA -->
+<div id="welcomeScreen" style="display:none;position:fixed;inset:0;background:linear-gradient(135deg,#1A3A6A,#2a5aaa 60%,#1a5a3a);z-index:999;align-items:center;justify-content:center;flex-direction:column;gap:24px;padding:30px;">
+  <div style="text-align:center;max-width:480px;">
+    <div style="font-size:3.5rem;margin-bottom:8px;">🏪</div>
+    <div style="font-family:'Sora',sans-serif;font-size:1.5rem;font-weight:800;color:#fff;margin-bottom:6px;">Curso de Inducción</div>
+    <div style="font-family:'Sora',sans-serif;font-size:1rem;font-weight:600;color:rgba(255,255,255,.7);margin-bottom:4px;">Cajero de Tienda de Conveniencia</div>
+    <div style="font-size:.8rem;color:rgba(255,255,255,.5);margin-bottom:28px;">Grupo Faza · E-Learning</div>
+    <div style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:12px;padding:14px 20px;margin-bottom:24px;text-align:left;">
+      <div style="font-family:'Sora',sans-serif;font-size:.75rem;font-weight:700;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">Contenido del curso</div>
+      <div style="display:flex;flex-direction:column;gap:7px;font-size:.84rem;color:rgba(255,255,255,.85);">
+        <span>📋 Introducción al puesto</span>
+        <span>💰 Manejo de Caja y Cobros</span>
+        <span>🛒 Atención al Cliente</span>
+        <span>📦 Inventario y Operación</span>
+        <span>✅ Evaluación Final (85% mínimo · 2 intentos)</span>
+      </div>
+    </div>
+    <button onclick="iniciarCurso()" style="background:linear-gradient(135deg,#B85E1A,#E07A2F);color:#fff;border:none;border-radius:12px;padding:16px 40px;font-family:'Sora',sans-serif;font-size:1rem;font-weight:700;cursor:pointer;box-shadow:0 6px 24px rgba(224,122,47,.5);transition:all .2s;width:100%;">
+      ▶ Iniciar Curso
+    </button>
+    <div style="font-size:.7rem;color:rgba(255,255,255,.35);margin-top:12px;">⏱ Duración aproximada: 20 minutos · 🔊 Activa el audio para mejor experiencia</div>
+  </div>
+</div>
+
+<header class="header">
+  <div class="header-inner">
+    <div class="header-brand">
+      <div class="header-icon">🏪</div>
+      <div class="header-title">
+        <h1>Cajero de Tienda de Conveniencia</h1>
+        <p>Grupo Faza · E-Learning de Inducción</p>
+      </div>
+    </div>
+    <div class="header-right">
+      <button class="btn-hdr" id="btnMute" onclick="toggleMute()">🔊</button>
+      <a class="btn-hdr" href="https://grupofazamx.sharepoint.com/sites/PortalGrupoFaza/Lists/RegistroCursosInduccion" target="_blank">📊 Ver Registro</a>
+    </div>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+</header>
+
+<div class="container">
+  <div class="module-nav">
+    <div class="module-tab active"  onclick="goModule(0)">📋 Introducción</div>
+    <div class="module-tab locked"  onclick="goModule(1)">💰 Caja y Cobros</div>
+    <div class="module-tab locked"  onclick="goModule(2)">🛒 Atención al Cliente</div>
+    <div class="module-tab locked"  onclick="goModule(3)">📦 Inventario</div>
+    <div class="module-tab locked"  onclick="goModule(4)">✅ Evaluación</div>
+  </div>
+
+  <!-- MOD 0 -->
+  <div class="content-card active" id="mod-0">
+    <div class="scene-wrapper">
+      <div class="scene-bg"><div class="shelf"></div><div class="counter-desk"></div><div class="scene-floor"></div></div>
+      <div class="scene-progress-bar"><div class="scene-progress-fill" id="spf-0"></div></div>
+      <div class="scene-label">🎬 Primer día de trabajo</div>
+      <div class="voice-wave hidden" id="vw-0"><div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div></div>
+      <div class="bubble bubble-ana" id="bA-0"></div><div class="bubble bubble-luis" id="bB-0"></div>
+      <div class="characters-area">
+        <div class="character char-ana" id="cA-0"><div class="char-body"><div class="char-head">👩</div><div class="char-torso"><div class="char-badge"></div></div><div class="char-legs"><div class="char-leg"></div><div class="char-leg"></div></div></div><div class="char-name">Ana · Encargada</div></div>
+        <div class="character char-luis" id="cB-0"><div class="char-body"><div class="char-head">👨</div><div class="char-torso"><div class="char-badge"></div></div><div class="char-legs"><div class="char-leg"></div><div class="char-leg"></div></div></div><div class="char-name">Luis · Nuevo Cajero</div></div>
+      </div>
+      <div class="scene-panel"><div class="dialog-text" id="dt-0">Iniciando escena…</div><div class="dots" id="dots-0"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div><div class="scene-done-lbl" id="done-0">✓ Completa</div></div>
+    </div>
+    <div class="module-content content-lock" id="lock-0">
+      <div class="module-header"><div class="module-emoji">📋</div><div class="module-title"><h2>Bienvenido a tu nuevo rol</h2><p>Conoce el puesto, responsabilidades e importancia de tu trabajo</p></div></div>
+      <div class="divider"></div>
+      <div class="section"><h3>¿Qué hace un Cajero de Tienda de Conveniencia?</h3><p>El cajero es la cara principal de la tienda. Su rol combina atención al cliente, manejo de efectivo, operación del punto de venta y apoyo en la operación general del establecimiento.</p></div>
+      <div class="info-grid">
+        <div class="info-item"><strong>Área</strong><span>Operaciones / Ventas</span></div>
+        <div class="info-item"><strong>Reporta a</strong><span>Gerente / Encargado de Turno</span></div>
+        <div class="info-item"><strong>Jornada</strong><span>Turnos rotativos (mañana, tarde, noche)</span></div>
+        <div class="info-item"><strong>Ambiente</strong><span>Tienda al público, trato constante</span></div>
+      </div>
+      <div class="section" style="margin-top:16px"><h3>Responsabilidades principales</h3>
+        <ul class="checklist"><li>Cobrar productos en caja (efectivo, tarjeta, vales)</li><li>Brindar atención amable y eficiente al cliente</li><li>Mantener el orden y limpieza de su área</li><li>Apoyar en surtido y acomodo de mercancía</li><li>Realizar apertura y cierre de caja con cuadre correcto</li><li>Reportar incidencias al encargado de turno</li></ul>
+      </div>
+      <div class="tip-box"><span>💡</span><p>La puntualidad es fundamental. Si habrá algún imprevisto, avisa a tu encargado con anticipación.</p></div>
+      <div class="nav-btns"><button class="btn btn-primary" id="next-0" onclick="nextModule(0)" disabled>Siguiente módulo →</button></div>
+    </div>
+  </div>
+
+  <!-- MOD 1 -->
+  <div class="content-card" id="mod-1">
+    <div class="scene-wrapper">
+      <div class="scene-bg"><div class="shelf"></div><div class="counter-desk"></div><div class="scene-floor"></div></div>
+      <div class="scene-progress-bar"><div class="scene-progress-fill" id="spf-1"></div></div>
+      <div class="scene-label">🎬 Apertura de caja</div>
+      <div class="voice-wave hidden" id="vw-1"><div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div></div>
+      <div class="bubble bubble-ana" id="bA-1"></div><div class="bubble bubble-luis" id="bB-1"></div>
+      <div class="characters-area">
+        <div class="character char-ana" id="cA-1"><div class="char-body"><div class="char-head">👩</div><div class="char-torso"><div class="char-badge"></div></div><div class="char-legs"><div class="char-leg"></div><div class="char-leg"></div></div></div><div class="char-name">Ana · Encargada</div></div>
+        <div class="character char-luis" id="cB-1"><div class="char-body"><div class="char-head">👨</div><div class="char-torso"><div class="char-badge"></div></div><div class="char-legs"><div class="char-leg"></div><div class="char-leg"></div></div></div><div class="char-name">Luis · Cajero</div></div>
+      </div>
+      <div class="scene-panel"><div class="dialog-text" id="dt-1">Iniciando escena…</div><div class="dots" id="dots-1"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div><div class="scene-done-lbl" id="done-1">✓ Completa</div></div>
+    </div>
+    <div class="module-content content-lock" id="lock-1">
+      <div class="module-header"><div class="module-emoji">💰</div><div class="module-title"><h2>Manejo de Caja y Cobros</h2><p>Procedimientos de cobro, apertura, cierre y cuadre de caja</p></div></div>
+      <div class="divider"></div>
+      <div class="section"><h3>Apertura de caja</h3><p>Antes de operar, verifica el fondo asignado, cuenta el efectivo y firma el acta de apertura. Cualquier diferencia debe reportarse de inmediato.</p></div>
+      <div class="section"><h3>Formas de pago</h3><ul class="checklist"><li>Efectivo (billetes y monedas de curso legal)</li><li>Tarjeta de débito y crédito (terminal bancaria)</li><li>Vales de despensa (según convenio vigente)</li><li>Pagos digitales / QR (según habilitación)</li></ul></div>
+      <div class="section"><h3>Identificación de billetes falsos</h3><p>Usa el detector UV: verifica hilo de seguridad, marca de agua y tinta que cambia de color. Si hay duda, usa el marcador verificador y no aceptes el billete.</p></div>
+      <div class="alert-box"><span>🚨</span><p><strong>Regla clave:</strong> Nunca dejes la caja abierta sin atención. El cajero responde por cualquier diferencia en su turno.</p></div>
+      <div class="tip-box"><span>💡</span><p>Siempre da el cambio contando en voz alta frente al cliente. Evita malentendidos y te protege.</p></div>
+      <div class="nav-btns"><button class="btn btn-outline" onclick="goModule(0)">← Anterior</button><button class="btn btn-primary" id="next-1" onclick="nextModule(1)" disabled>Siguiente módulo →</button></div>
+    </div>
+  </div>
+
+  <!-- MOD 2 -->
+  <div class="content-card" id="mod-2">
+    <div class="scene-wrapper">
+      <div class="scene-bg"><div class="shelf"></div><div class="counter-desk"></div><div class="scene-floor"></div></div>
+      <div class="scene-progress-bar"><div class="scene-progress-fill" id="spf-2"></div></div>
+      <div class="scene-label">🎬 Cliente molesto</div>
+      <div class="voice-wave hidden" id="vw-2"><div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div></div>
+      <div class="bubble bubble-ana" id="bA-2"></div><div class="bubble bubble-luis" id="bB-2"></div>
+      <div class="characters-area">
+        <div class="character char-ana" id="cA-2"><div class="char-body"><div class="char-head">👩</div><div class="char-torso"><div class="char-badge"></div></div><div class="char-legs"><div class="char-leg"></div><div class="char-leg"></div></div></div><div class="char-name">María · Cliente</div></div>
+        <div class="character char-luis" id="cB-2"><div class="char-body"><div class="char-head">👨</div><div class="char-torso"><div class="char-badge"></div></div><div class="char-legs"><div class="char-leg"></div><div class="char-leg"></div></div></div><div class="char-name">Luis · Cajero</div></div>
+      </div>
+      <div class="scene-panel"><div class="dialog-text" id="dt-2">Iniciando escena…</div><div class="dots" id="dots-2"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div><div class="scene-done-lbl" id="done-2">✓ Completa</div></div>
+    </div>
+    <div class="module-content content-lock" id="lock-2">
+      <div class="module-header"><div class="module-emoji">🛒</div><div class="module-title"><h2>Atención al Cliente</h2><p>Estándares de servicio, manejo de quejas y experiencia del cliente</p></div></div>
+      <div class="divider"></div>
+      <div class="section"><h3>Estándar de servicio</h3><p>Cada cliente debe ser saludado al llegar y despedido al salir con tono amable, claro y respetuoso en todo momento.</p></div>
+      <div class="info-grid">
+        <div class="info-item"><strong>✅ Siempre</strong><span>Saludar, sonreír, agradecer la visita</span></div>
+        <div class="info-item"><strong>🚫 Nunca</strong><span>Ignorar, usar celular, discutir</span></div>
+        <div class="info-item"><strong>📢 Bienvenida</strong><span>"¡Buen día! ¿Le puedo ayudar?"</span></div>
+        <div class="info-item"><strong>📢 Despedida</strong><span>"Gracias, ¡hasta pronto!"</span></div>
+      </div>
+      <div class="section" style="margin-top:16px"><h3>Manejo de quejas</h3><ul class="checklist"><li>Escucha sin interrumpir</li><li>Ofrece disculpa sincera</li><li>Busca solución dentro de tu autoridad</li><li>Si supera tu alcance, llama al encargado</li><li>Nunca eleves la voz</li></ul></div>
+      <div class="alert-box"><span>🚨</span><p><strong>Tolerancia cero:</strong> Venta de alcohol/tabaco a menores es motivo de despido inmediato.</p></div>
+      <div class="nav-btns"><button class="btn btn-outline" onclick="goModule(1)">← Anterior</button><button class="btn btn-primary" id="next-2" onclick="nextModule(2)" disabled>Siguiente módulo →</button></div>
+    </div>
+  </div>
+
+  <!-- MOD 3 -->
+  <div class="content-card" id="mod-3">
+    <div class="scene-wrapper">
+      <div class="scene-bg"><div class="shelf"></div><div class="counter-desk"></div><div class="scene-floor"></div></div>
+      <div class="scene-progress-bar"><div class="scene-progress-fill" id="spf-3"></div></div>
+      <div class="scene-label">🎬 Surtido y prevención</div>
+      <div class="voice-wave hidden" id="vw-3"><div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div></div>
+      <div class="bubble bubble-ana" id="bA-3"></div><div class="bubble bubble-luis" id="bB-3"></div>
+      <div class="characters-area">
+        <div class="character char-ana" id="cA-3"><div class="char-body"><div class="char-head">👩</div><div class="char-torso"><div class="char-badge"></div></div><div class="char-legs"><div class="char-leg"></div><div class="char-leg"></div></div></div><div class="char-name">Ana · Encargada</div></div>
+        <div class="character char-luis" id="cB-3"><div class="char-body"><div class="char-head">👨</div><div class="char-torso"><div class="char-badge"></div></div><div class="char-legs"><div class="char-leg"></div><div class="char-leg"></div></div></div><div class="char-name">Luis · Cajero</div></div>
+      </div>
+      <div class="scene-panel"><div class="dialog-text" id="dt-3">Iniciando escena…</div><div class="dots" id="dots-3"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div><div class="scene-done-lbl" id="done-3">✓ Completa</div></div>
+    </div>
+    <div class="module-content content-lock" id="lock-3">
+      <div class="module-header"><div class="module-emoji">📦</div><div class="module-title"><h2>Inventario y Operación de Tienda</h2><p>Orden, limpieza, surtido y prevención de pérdidas</p></div></div>
+      <div class="divider"></div>
+      <div class="section"><h3>Surtido de mercancía (PEPS)</h3><ul class="checklist"><li>Productos de fecha próxima al frente (más viejos primero)</li><li>Verificar fechas de caducidad al surtir</li><li>Reportar productos dañados o vencidos</li><li>Mantener etiquetas de precio visibles y correctas</li></ul></div>
+      <div class="section"><h3>Prevención de pérdidas</h3><p>El robo hormiga es una pérdida real. Repórtalos discretamente, sin confrontar al cliente directamente.</p></div>
+      <div class="section"><h3>Emergencias</h3>
+        <div class="info-grid">
+          <div class="info-item"><strong>Robo/Asalto</strong><span>No resistir. Protocolo posterior.</span></div>
+          <div class="info-item"><strong>Incendio</strong><span>Evacuar, alarma, 911.</span></div>
+          <div class="info-item"><strong>Cliente enfermo</strong><span>Encargado + 911 inmediato.</span></div>
+          <div class="info-item"><strong>Falla sistema</strong><span>Reportar. No procesar sin autorización.</span></div>
+        </div>
+      </div>
+      <div class="tip-box"><span>💡</span><p>Tu seguridad y la de los clientes es lo primero. Los bienes materiales son recuperables.</p></div>
+      <div class="nav-btns"><button class="btn btn-outline" onclick="goModule(2)">← Anterior</button><button class="btn btn-primary" id="next-3" onclick="nextModule(3)" disabled>Ir a Evaluación →</button></div>
+    </div>
+  </div>
+
+  <!-- MOD 4: EVALUACIÓN -->
+  <div class="content-card" id="mod-4">
+    <div class="quiz-wrap">
+      <div class="module-header"><div class="module-emoji">✅</div><div class="module-title"><h2>Evaluación Final</h2><p>Calificación mínima aprobatoria: <strong>85%</strong> · Máximo 2 intentos</p></div></div>
+      <div class="divider"></div>
+      <div id="quizForm">
+        <div class="participant-card">
+          <h3>👤 Datos del participante</h3>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="studentName">Nombre completo *</label>
+              <input type="text" id="studentName" placeholder="Ej: Juan García López" maxlength="80">
+            </div>
+            <div class="form-group">
+              <label for="studentEmail">Correo corporativo *</label>
+              <input type="email" id="studentEmail" placeholder="Ej: juan.garcia@grupofaza.com" maxlength="100">
+            </div>
+          </div>
+          <div class="attempt-row">
+            <div class="form-note">📌 Tus datos quedarán registrados en SharePoint al completar la evaluación</div>
+            <div class="attempt-info">
+              Intentos:
+              <div class="attempt-dots">
+                <div class="attempt-dot" id="dot1"></div>
+                <div class="attempt-dot" id="dot2"></div>
+              </div>
+              (<span id="attemptNum">1</span>/2)
+            </div>
+          </div>
+        </div>
+        <div class="quiz-meta">📌 Se requiere <strong>≥ 85%</strong> (7 de 8 respuestas). El resultado se guarda automáticamente en SharePoint vía Power Automate.</div>
+
+        <div class="quiz-question" id="q1"><div class="q-num">Pregunta 1 de 8</div><div class="q-text">¿Qué debes hacer al inicio de tu turno antes de operar la caja?</div><div class="options"><label class="option" onclick="selectOpt(this,'q1')"><input type="radio">Comenzar a atender clientes de inmediato</label><label class="option" onclick="selectOpt(this,'q1')"><input type="radio">Verificar y contar el fondo de caja, firmar apertura</label><label class="option" onclick="selectOpt(this,'q1')"><input type="radio">Esperar a que llegue el encargado</label><label class="option" onclick="selectOpt(this,'q1')"><input type="radio">Revisar el inventario de la tienda</label></div></div>
+        <div class="quiz-question" id="q2"><div class="q-num">Pregunta 2 de 8</div><div class="q-text">Si tienes dudas sobre la autenticidad de un billete, ¿qué debes hacer?</div><div class="options"><label class="option" onclick="selectOpt(this,'q2')"><input type="radio">Aceptarlo para no hacer esperar al cliente</label><label class="option" onclick="selectOpt(this,'q2')"><input type="radio">Usarlo para dar cambio a otro cliente</label><label class="option" onclick="selectOpt(this,'q2')"><input type="radio">Verificarlo con detector UV o marcador y reportarlo</label><label class="option" onclick="selectOpt(this,'q2')"><input type="radio">Devolverlo diciendo que no tienes cambio</label></div></div>
+        <div class="quiz-question" id="q3"><div class="q-num">Pregunta 3 de 8</div><div class="q-text">¿Cuál es la conducta correcta al cobrar con efectivo?</div><div class="options"><label class="option" onclick="selectOpt(this,'q3')"><input type="radio">Contar el cambio en silencio para mayor rapidez</label><label class="option" onclick="selectOpt(this,'q3')"><input type="radio">Contar el cambio en voz alta frente al cliente</label><label class="option" onclick="selectOpt(this,'q3')"><input type="radio">Dejar abierto el cajón para agilizar transacciones</label><label class="option" onclick="selectOpt(this,'q3')"><input type="radio">Guardar el efectivo en el bolsillo temporalmente</label></div></div>
+        <div class="quiz-question" id="q4"><div class="q-num">Pregunta 4 de 8</div><div class="q-text">Un cliente se queja furioso por un producto defectuoso. ¿Cuál es la respuesta correcta?</div><div class="options"><label class="option" onclick="selectOpt(this,'q4')"><input type="radio">Discutir con el cliente</label><label class="option" onclick="selectOpt(this,'q4')"><input type="radio">Ignorarlo hasta que se calme</label><label class="option" onclick="selectOpt(this,'q4')"><input type="radio">Escuchar, disculparse y llamar al encargado si es necesario</label><label class="option" onclick="selectOpt(this,'q4')"><input type="radio">Pedirle que regrese otro día</label></div></div>
+        <div class="quiz-question" id="q5"><div class="q-num">Pregunta 5 de 8</div><div class="q-text">¿A partir de qué edad aparente debes pedir ID para vender alcohol o tabaco?</div><div class="options"><label class="option" onclick="selectOpt(this,'q5')"><input type="radio">Solo si parecen menores de 18 años</label><label class="option" onclick="selectOpt(this,'q5')"><input type="radio">A personas que aparenten ser menores de 25 años</label><label class="option" onclick="selectOpt(this,'q5')"><input type="radio">No es necesario pedir ID</label><label class="option" onclick="selectOpt(this,'q5')"><input type="radio">Solo si el encargado está presente</label></div></div>
+        <div class="quiz-question" id="q6"><div class="q-num">Pregunta 6 de 8</div><div class="q-text">¿Qué significa PEPS en el surtido de mercancía?</div><div class="options"><label class="option" onclick="selectOpt(this,'q6')"><input type="radio">Poner los productos más caros al frente</label><label class="option" onclick="selectOpt(this,'q6')"><input type="radio">Primero en Entrar, Primero en Salir (más viejos al frente)</label><label class="option" onclick="selectOpt(this,'q6')"><input type="radio">Poner los productos nuevos al frente</label><label class="option" onclick="selectOpt(this,'q6')"><input type="radio">Colocar por tamaño del empaque</label></div></div>
+        <div class="quiz-question" id="q7"><div class="q-num">Pregunta 7 de 8</div><div class="q-text">Durante un asalto, ¿cuál debe ser tu primera acción?</div><div class="options"><label class="option" onclick="selectOpt(this,'q7')"><input type="radio">Confrontar al asaltante</label><label class="option" onclick="selectOpt(this,'q7')"><input type="radio">Retener al delincuente hasta que llegue la policía</label><label class="option" onclick="selectOpt(this,'q7')"><input type="radio">No ofrecer resistencia y seguir el protocolo posterior</label><label class="option" onclick="selectOpt(this,'q7')"><input type="radio">Esconder el efectivo antes de que lo tomen</label></div></div>
+        <div class="quiz-question" id="q8"><div class="q-num">Pregunta 8 de 8</div><div class="q-text">Si notas comportamiento sospechoso de un cliente, ¿qué haces?</div><div class="options"><label class="option" onclick="selectOpt(this,'q8')"><input type="radio">Confrontarlo directamente</label><label class="option" onclick="selectOpt(this,'q8')"><input type="radio">Ignorarlo para no generar conflicto</label><label class="option" onclick="selectOpt(this,'q8')"><input type="radio">Avisar discretamente al encargado o guardia</label><label class="option" onclick="selectOpt(this,'q8')"><input type="radio">Llamar a la policía de inmediato desde la caja</label></div></div>
+
+        <div class="nav-btns">
+          <button class="btn btn-outline" onclick="goModule(3)">← Anterior</button>
+          <button class="btn btn-primary" onclick="submitQuiz()">Enviar evaluación ✓</button>
+        </div>
+      </div>
+
+      <div class="eval-result" id="evalResult">
+        <div class="big-score" id="bigScore">--</div>
+        <div class="score-sub" id="scoreSub"></div>
+        <div id="evalBadge"></div>
+        <div class="eval-msg" id="evalMsg"></div>
+        <div id="savingStatus"></div>
+        <div class="eval-result-btns" id="evalBtns"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CONSTANCIA -->
+<div class="modal-overlay" id="constanciaModal">
+  <div class="modal-box">
+    <div class="modal-actions">
+      <h3>🎓 Constancia de Curso — Grupo Faza</h3>
+      <div class="modal-btns">
+        <button class="btn-print" onclick="window.print()">🖨️ Imprimir / Guardar PDF</button>
+        <button class="btn-close-modal" onclick="document.getElementById('constanciaModal').classList.remove('show')">✕ Cerrar</button>
+      </div>
+    </div>
+    <div id="constancia">
+      <div class="cert-border"></div>
+      <div class="cert-logo-area">
+        <div class="cert-company">Grupo Faza</div>
+        <div class="cert-company-sub">Formación y Desarrollo de Talento</div>
+      </div>
+      <div class="cert-divider"></div>
+      <div class="cert-otorga">Otorga la presente</div>
+      <div class="cert-title">CONSTANCIA</div>
+      <div class="cert-recipient-label">a:</div>
+      <div class="cert-recipient" id="certName">—</div>
+      <div class="cert-body">por haber concluido satisfactoriamente el curso</div>
+      <div class="cert-body" style="margin-top:5px;"><span class="cert-course-name">Inducción: Cajero de Tienda de Conveniencia</span></div>
+      <div class="cert-body" style="margin-top:4px;">Que se llevó a cabo el</div>
+      <div class="cert-date-line" id="certDate" style="margin-top:4px;font-weight:600;font-size:.93rem;color:var(--text);">—</div>
+      <div style="text-align:center;margin-bottom:22px;"><span class="cert-score-badge" id="certScore">Calificación: —</span></div>
+      <div class="cert-signature-area">
+        <div class="cert-sig-block">
+          <div class="cert-sig-img-box"><span>FIRMA DIGITAL</span></div>
+          <div class="cert-sig-name" id="certDirectorName">Lic. [Director General]</div>
+          <div class="cert-sig-title">Director General · Grupo Faza</div>
+        </div>
+      </div>
+      <div class="cert-folio" id="certFolio"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ══════════════════════════════════════════
+   ★ CONFIGURACIÓN
+══════════════════════════════════════════ */
+const CONFIG = {
+  // ← URL de tu Flow de Power Automate (ya configurada)
+  flowUrl: 'https://defaultb16dca4b90624259a5cd2f8b4a3eaf.e2.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/120479eeacc94f0ba166dbf327ada9ed/triggers/manual/paths/invoke?api-version=1',
+
+  // ← Edita el nombre del Director General
+  directorName: 'Lic. [Nombre del Director General]',
+
+  courseName: 'Cajero de Tienda de Conveniencia'
+};
+
+/* ══════════════════════════════════════════
+   TTS
+══════════════════════════════════════════ */
+let voiceAna=null,voiceLuis=null,muted=false;
+const ttsOK='speechSynthesis' in window;
+function setupVoices(){
+  if(!ttsOK)return;
+  const vs=window.speechSynthesis.getVoices();
+  if(!vs.length)return;
+  voiceAna=vs.find(v=>v.lang.startsWith('es')&&/Paulina|Monica|Lucia|Elena|Isabella|Laura/i.test(v.name))||vs.find(v=>v.lang.startsWith('es-MX'))||vs.find(v=>v.lang.startsWith('es'))||vs[0];
+  voiceLuis=vs.find(v=>v.lang.startsWith('es')&&/Jorge|Pablo|Diego|Miguel|Carlos/i.test(v.name)&&v!==voiceAna)||vs.find(v=>v.lang.startsWith('es')&&v!==voiceAna)||vs[1]||vs[0];
+}
+if(ttsOK){window.speechSynthesis.onvoiceschanged=setupVoices;setupVoices();}
+function toggleMute(){
+  muted=!muted;
+  document.getElementById('btnMute').textContent=muted?'🔇':'🔊';
+  document.getElementById('btnMute').classList.toggle('muted',muted);
+  if(muted&&ttsOK)window.speechSynthesis.cancel();
+}
+
+/* ══════════════════════════════════════════
+   ESCENAS
+══════════════════════════════════════════ */
+const SCENES={
+  0:[{sp:'B',text:'Buenos días. Soy Luis, el cajero nuevo. ¿Por dónde empezamos?'},{sp:'A',text:'Bienvenido Luis, soy Ana, tu encargada. Primero te explico cuál es tu rol aquí.'},{sp:'A',text:'Tú eres la cara de la tienda. Cobras, atiendes clientes y mantienes tu área en orden.'},{sp:'B',text:'Entendido. ¿Y qué tan importante es la puntualidad?'},{sp:'A',text:'Es fundamental. Si no puedes venir, avísame con tiempo. El turno depende de ti.'}],
+  1:[{sp:'A',text:'Luis, antes de abrir la caja debes contar el fondo y firmar el acta de apertura.'},{sp:'B',text:'¿Y si el monto que cuento no coincide con el acta?'},{sp:'A',text:'Me avisas de inmediato. Nunca empieces a operar con una diferencia sin reportar.'},{sp:'B',text:'¿Y cómo detecto un billete falso?'},{sp:'A',text:'Usa el detector ultravioleta o el marcador verificador. Si hay duda, no lo aceptes. Y siempre da el cambio contando en voz alta.'}],
+  2:[{sp:'A',text:'Disculpe. Me vendieron un refresco caducado. Quiero que me lo cambien.'},{sp:'B',text:'Buenos días señora. Lamento mucho lo ocurrido. ¿Me permite ver el producto?'},{sp:'A',text:'Aquí está. Lo compré hace diez minutos. Estoy muy molesta.'},{sp:'B',text:'Tiene toda la razón. Permítame llamar a la encargada para atenderle de la mejor manera.'},{sp:'A',text:'Bien hecho Luis. Escucha, discúlpate y escala. Nunca discutas con el cliente.'}],
+  3:[{sp:'A',text:'Luis, hay que surtir estos refrescos. ¿Cómo los acomodas?'},{sp:'B',text:'Los nuevos atrás y los de fecha próxima al frente. Eso es el sistema PEPS, ¿verdad?'},{sp:'A',text:'Exacto. Y si ves alguno caducado, lo separas y me avisas de inmediato.'},{sp:'B',text:'¿Y si veo a alguien actuando de forma sospechosa?'},{sp:'A',text:'Me avisas discretamente. Nunca lo confrontes tú solo. Tu seguridad es siempre lo primero.'}]
+};
+const sceneStatus={0:false,1:false,2:false,3:false};
+const moduleUnlocked=[true,false,false,false,false];
+
+function playScene(idx){playLine(idx,0);}
+function playLine(idx,li){
+  const lines=SCENES[idx];
+  if(li>=lines.length){onSceneEnd(idx);return;}
+  const line=lines[li],total=lines.length;
+  showLine(idx,line,li+1,total);
+  updateSceneBar(idx,li+1,total);
+  if(ttsOK&&!muted){
+    window.speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(line.text);
+    u.lang='es-MX';u.rate=0.92;
+    if(line.sp==='A'){u.pitch=1.25;u.voice=voiceAna;}else{u.pitch=0.82;u.voice=voiceLuis;}
+    showVoiceWave(idx,true);
+    const next=()=>{showVoiceWave(idx,false);clearBubbles(idx);setTimeout(()=>playLine(idx,li+1),500);};
+    u.onend=next;u.onerror=next;
+    window.speechSynthesis.speak(u);
+  }else{
+    const ms=Math.max(2200,line.text.length*55);
+    setTimeout(()=>{clearBubbles(idx);setTimeout(()=>playLine(idx,li+1),380);},ms);
+  }
+}
+function showLine(idx,line,num,total){
+  const isA=line.sp==='A';
+  const cA=document.getElementById('cA-'+idx),cB=document.getElementById('cB-'+idx);
+  const bA=document.getElementById('bA-'+idx),bB=document.getElementById('bB-'+idx);
+  const dt=document.getElementById('dt-'+idx);
+  cA.classList.remove('speaking');cB.classList.remove('speaking');
+  const nameA=idx===2?'María':'Ana';
+  const name=isA?nameA:'Luis';
+  const cls=isA?'speaker-ana':'speaker-luis';
+  dt.innerHTML=`<span class="${cls} dialog-speaker">${name}:</span> ${line.text} <span style="color:rgba(255,255,255,.28);font-size:.67rem">(${num}/${total})</span>`;
+  setTimeout(()=>{
+    if(isA){cA.classList.add('speaking');bA.textContent=line.text;bA.classList.add('show');}
+    else{cB.classList.add('speaking');bB.textContent=line.text;bB.classList.add('show');}
+  },60);
+}
+function clearBubbles(idx){
+  ['bA','bB'].forEach(p=>{const b=document.getElementById(p+'-'+idx);if(b){b.classList.remove('show');b.textContent='';}});
+  ['cA','cB'].forEach(p=>{const c=document.getElementById(p+'-'+idx);if(c)c.classList.remove('speaking');});
+}
+function updateSceneBar(idx,cur,tot){const b=document.getElementById('spf-'+idx);if(b){b.style.transition='width .3s ease';b.style.width=(cur/tot*100)+'%';}}
+function showVoiceWave(idx,show){const vw=document.getElementById('vw-'+idx);if(vw)vw.classList.toggle('hidden',!show);}
+function onSceneEnd(idx){
+  sceneStatus[idx]=true;clearBubbles(idx);showVoiceWave(idx,false);
+  const b=document.getElementById('spf-'+idx);if(b){b.style.transition='width .5s';b.style.width='100%';}
+  const dt=document.getElementById('dt-'+idx);if(dt)dt.innerHTML='<span style="color:#4CC896;font-weight:700">✓ Escena completada.</span> Revisa el contenido y avanza.';
+  document.getElementById('dots-'+idx).style.display='none';
+  document.getElementById('done-'+idx).style.display='block';
+  const lock=document.getElementById('lock-'+idx);if(lock)lock.classList.add('unlocked');
+  const btn=document.getElementById('next-'+idx);if(btn)btn.disabled=false;
+  setTimeout(()=>lock&&lock.scrollIntoView({behavior:'smooth',block:'start'}),600);
+}
+
+/* ══════════════════════════════════════════
+   NAVEGACIÓN
+══════════════════════════════════════════ */
+function goModule(idx){
+  if(!moduleUnlocked[idx])return;
+  if(ttsOK)window.speechSynthesis.cancel();
+  document.querySelectorAll('.content-card').forEach(c=>c.classList.remove('active'));
+  document.querySelectorAll('.module-tab').forEach((t,i)=>{t.classList.remove('active');if(i===idx)t.classList.add('active');});
+  document.getElementById('mod-'+idx).classList.add('active');
+  document.getElementById('progressFill').style.width=(idx/4*100)+'%';
+  window.scrollTo({top:0,behavior:'smooth'});
+  if(idx<=3&&!sceneStatus[idx])setTimeout(()=>playScene(idx),700);
+}
+function nextModule(cur){
+  const next=cur+1;
+  const tabs=document.querySelectorAll('.module-tab');
+  tabs[cur].classList.remove('active');tabs[cur].classList.add('done');
+  moduleUnlocked[next]=true;tabs[next].classList.remove('locked');
+  goModule(next);
+}
+
+/* ══════════════════════════════════════════
+   EVALUACIÓN
+══════════════════════════════════════════ */
+const ANSWERS={q1:1,q2:2,q3:1,q4:2,q5:1,q6:1,q7:2,q8:2};
+let selections={},currentAttempt=1;
+
+function selectOpt(el,qId){
+  el.closest('.options').querySelectorAll('.option').forEach(o=>o.classList.remove('selected'));
+  el.classList.add('selected');
+  selections[qId]=Array.from(el.closest('.options').querySelectorAll('.option')).indexOf(el);
+}
+
+async function submitQuiz(){
+  const name=document.getElementById('studentName').value.trim();
+  const email=document.getElementById('studentEmail').value.trim();
+  if(!name){document.getElementById('studentName').classList.add('error');alert('Por favor escribe tu nombre completo.');document.getElementById('studentName').focus();return;}
+  if(!email||!email.includes('@')){document.getElementById('studentEmail').classList.add('error');alert('Por favor escribe tu correo corporativo válido.');document.getElementById('studentEmail').focus();return;}
+  document.getElementById('studentName').classList.remove('error');
+  document.getElementById('studentEmail').classList.remove('error');
+
+  const qs=['q1','q2','q3','q4','q5','q6','q7','q8'];
+  if(qs.some(q=>selections[q]===undefined)){alert('Por favor responde todas las preguntas antes de enviar.');return;}
+
+  let score=0;
+  qs.forEach(q=>{
+    const opts=document.querySelectorAll('#'+q+' .option');
+    opts.forEach((o,i)=>{
+      o.style.pointerEvents='none';
+      if(i===ANSWERS[q])o.classList.add('correct');
+      else if(i===selections[q]&&selections[q]!==ANSWERS[q])o.classList.add('wrong');
+    });
+    if(selections[q]===ANSWERS[q])score++;
+  });
+
+  const pct=Math.round(score/8*100);
+  document.getElementById('quizForm').style.display='none';
+  const res=document.getElementById('evalResult');
+  res.style.display='block';
+  document.getElementById('scoreSub').textContent=score+' de 8 respuestas correctas';
+
+  const folio='GF-'+Date.now().toString(36).toUpperCase();
+  const btns=document.getElementById('evalBtns');
+  btns.innerHTML='';
+
+  if(pct>=85){
+    document.getElementById('bigScore').className='big-score pass';
+    document.getElementById('bigScore').textContent=pct+'%';
+    const lbl=currentAttempt===1?'al primer intento':'al segundo intento';
+    document.getElementById('evalBadge').innerHTML=`<div class="eval-badge badge-pass">🎉 ¡APROBADO! — ${pct}%</div>`;
+    document.getElementById('evalMsg').innerHTML=`<strong>${name}</strong>, aprobaste el curso de inducción ${lbl}. Tu constancia está lista.`;
+    await enviarFlow({name,email,attempt:currentAttempt,pct,status:currentAttempt===1?'Aprobado 1er intento':'Aprobado 2do intento',folio});
+    const b=document.createElement('button');
+    b.className='btn-success';b.textContent='🎓 Ver Constancia';
+    b.onclick=()=>abrirConstancia(name,pct,folio);
+    btns.appendChild(b);
+
+  }else if(currentAttempt<2){
+    document.getElementById('bigScore').className='big-score fail';
+    document.getElementById('bigScore').textContent=pct+'%';
+    document.getElementById('evalBadge').innerHTML=`<div class="eval-badge badge-fail">✗ No aprobado — ${pct}%</div>`;
+    document.getElementById('evalMsg').innerHTML=`<strong>${name}</strong>, obtuviste ${pct}%. Se requiere <strong>≥ 85%</strong>.<br>Tienes <strong>1 intento más</strong>. Revisa las respuestas marcadas en rojo.`;
+    const b=document.createElement('button');
+    b.className='btn btn-primary';b.textContent='🔄 Reintentar evaluación';
+    b.onclick=retryQuiz;btns.appendChild(b);
+
+  }else{
+    document.getElementById('bigScore').className='big-score fail';
+    document.getElementById('bigScore').textContent=pct+'%';
+    document.getElementById('evalBadge').innerHTML=`<div class="eval-badge badge-retake">⚠ Debe retomar el curso</div>`;
+    document.getElementById('evalMsg').innerHTML=`<strong>${name}</strong>, no alcanzaste el 85% en dos intentos.<br>Deberás tomar el curso nuevamente desde el principio.`;
+    await enviarFlow({name,email,attempt:2,pct,status:'Debe retomar el curso',folio});
+    const b=document.createElement('button');
+    b.className='btn-danger';b.textContent='🔁 Reiniciar curso';
+    b.onclick=restartCourse;btns.appendChild(b);
+  }
+  res.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+/* ══════════════════════════════════════════
+   POWER AUTOMATE — enviar registro
+══════════════════════════════════════════ */
+async function enviarFlow(data){
+  const el=document.getElementById('savingStatus');
+  el.innerHTML='<div class="saving-row"><div class="spin-sm"></div> Guardando en SharePoint vía Power Automate…</div>';
+  try{
+    const resp=await fetch(CONFIG.flowUrl,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        nombre:      data.name,
+        correo:      data.email,
+        curso:       CONFIG.courseName,
+        intento:     data.attempt,
+        calificacion:data.pct,
+        estado:      data.status,
+        folio:       data.folio
+      })
+    });
+    // Power Automate regresa 202 Accepted en éxito
+    if(resp.ok||resp.status===202){
+      el.innerHTML='<div class="saving-row" style="color:var(--success)">✅ Registro guardado correctamente en SharePoint.</div>';
+    }else{
+      throw new Error('HTTP '+resp.status);
+    }
+  }catch(e){
+    console.error('Flow error:',e);
+    el.innerHTML=`<div class="saving-row" style="color:var(--error)">⚠ No se pudo guardar automáticamente. Notifica a RRHH con tu folio: <strong>${data.folio}</strong></div>`;
+  }
+}
+
+/* ══════════════════════════════════════════
+   REINTENTAR / REINICIAR
+══════════════════════════════════════════ */
+function retryQuiz(){
+  currentAttempt=2;selections={};
+  document.getElementById('dot1').classList.add('fail');
+  document.getElementById('dot2').classList.add('used');
+  document.getElementById('attemptNum').textContent='2';
+  document.querySelectorAll('.option').forEach(o=>{o.classList.remove('selected','correct','wrong');o.style.pointerEvents='';});
+  document.getElementById('evalResult').style.display='none';
+  document.getElementById('quizForm').style.display='block';
+  document.getElementById('studentName').readOnly=true;
+  document.getElementById('studentEmail').readOnly=true;
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function restartCourse(){
+  currentAttempt=1;selections={};
+  const tabs=document.querySelectorAll('.module-tab');
+  tabs.forEach((t,i)=>{t.classList.remove('active','done','locked');if(i===0)t.classList.add('active');else t.classList.add('locked');});
+  moduleUnlocked.fill(false);moduleUnlocked[0]=true;
+  Object.keys(sceneStatus).forEach(k=>sceneStatus[k]=false);
+  for(let i=0;i<=3;i++){
+    const spf=document.getElementById('spf-'+i);if(spf){spf.style.transition='none';spf.style.width='0%';}
+    const lock=document.getElementById('lock-'+i);if(lock)lock.classList.remove('unlocked');
+    document.getElementById('dots-'+i).style.display='flex';
+    document.getElementById('done-'+i).style.display='none';
+    const btn=document.getElementById('next-'+i);if(btn)btn.disabled=true;
+    const dt=document.getElementById('dt-'+i);if(dt)dt.textContent='Iniciando escena…';
+    clearBubbles(i);
+  }
+  document.querySelectorAll('.option').forEach(o=>{o.classList.remove('selected','correct','wrong');o.style.pointerEvents='';});
+  document.getElementById('evalResult').style.display='none';
+  document.getElementById('quizForm').style.display='block';
+  document.getElementById('studentName').readOnly=false;
+  document.getElementById('studentEmail').readOnly=false;
+  document.getElementById('dot1').className='attempt-dot';
+  document.getElementById('dot2').className='attempt-dot';
+  document.getElementById('attemptNum').textContent='1';
+  document.getElementById('progressFill').style.width='0%';
+  goModule(0);
+}
+
+/* ══════════════════════════════════════════
+   CONSTANCIA
+══════════════════════════════════════════ */
+function abrirConstancia(name,pct,folio){
+  const now=new Date();
+  const dias=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+  const meses=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  const fecha=`${dias[now.getDay()]} ${now.getDate()} de ${meses[now.getMonth()]} de ${now.getFullYear()}`;
+  document.getElementById('certName').textContent=name;
+  document.getElementById('certDate').textContent=fecha;
+  document.getElementById('certScore').textContent='Calificación: '+pct+'%';
+  document.getElementById('certFolio').textContent='Folio: '+folio;
+  document.getElementById('certDirectorName').textContent=CONFIG.directorName;
+  document.getElementById('constanciaModal').classList.add('show');
+}
+
+/* ══════════════════════════════════════════
+   INICIO
+══════════════════════════════════════════ */
+window.addEventListener('load',()=>{
+  document.getElementById('progressFill').style.width='0%';
+  // Mostrar pantalla de bienvenida — el clic del botón desbloquea TTS y autoplay
+  document.getElementById('welcomeScreen').style.display='flex';
+});
+
+function iniciarCurso(){
+  document.getElementById('welcomeScreen').style.display='none';
+  setTimeout(()=>playScene(0),500);
+}
+</script>
+</body>
+</html>
