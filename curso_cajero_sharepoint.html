@@ -501,7 +501,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 ══════════════════════════════════════════ */
 const CONFIG = {
   // ← URL de tu Flow de Power Automate (ya configurada)
-  flowUrl: 'https://defaultb16dca4b90624259a5cd2f8b4a3eaf.e2.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/120479eeacc94f0ba166dbf327ada9ed/triggers/manual/paths/invoke?api-version=1',
+  flowUrl: 'https://faza-registro.josafat-ramirez.workers.dev',
 
   // ← Edita el nombre del Director General
   directorName: 'Lic. [Nombre del Director General]',
@@ -700,12 +700,9 @@ async function enviarFlow(data){
   const el=document.getElementById('savingStatus');
   el.innerHTML='<div class="saving-row"><div class="spin-sm"></div> Guardando en SharePoint vía Power Automate…</div>';
   try{
-    // no-cors: el navegador no puede leer la respuesta entre dominios
-    // pero el dato SÍ llega a Power Automate correctamente
-    await fetch(CONFIG.flowUrl,{
+    const resp=await fetch(CONFIG.flowUrl,{
       method:'POST',
-      mode:'no-cors',
-      headers:{'Content-Type':'text/plain'},
+      headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
         nombre:      data.name,
         correo:      data.email,
@@ -716,8 +713,11 @@ async function enviarFlow(data){
         folio:       data.folio
       })
     });
-    // Con no-cors siempre llega aquí si el envío se completó
-    el.innerHTML='<div class="saving-row" style="color:var(--success)">✅ Registro guardado correctamente en SharePoint.</div>';
+    if(resp.ok){
+      el.innerHTML='<div class="saving-row" style="color:var(--success)">✅ Registro guardado correctamente en SharePoint.</div>';
+    }else{
+      throw new Error('HTTP '+resp.status);
+    }
   }catch(e){
     console.error('Flow error:',e);
     el.innerHTML=`<div class="saving-row" style="color:var(--error)">⚠ No se pudo guardar. Notifica a RRHH con tu folio: <strong>${data.folio}</strong></div>`;
